@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Goblin Hunter</title>
+	<style type="text/css">
+		body{
+			text-align: center;
+			margin: auto;
+		}
+	</style>
+</head>
+<body>
+	<h1>Conquer the Goblin!</h1>
+	<h4>Destroy the goblins. Press SPACE to swing your sword. Use the arrow keys to navigate. <br />
+	Watch out for your hit counter. Collect 10 ruppees to reset counter.</h4>
+
+	<div>
+		<h2>Swing Counter</h2>
+		<h4>4</h4>
+	</div>
+
+	<div>
+		<div>
+			<h2>Ruppees Collected</h2>
+			<h4>0</h4>
+		</div>
+	</div>
+	
+<script type="text/javascript">
+	// create the canvas tag with JS
+	var canvas = document.createElement('canvas');
+
+	// create a context for JS to play inside of
+
+	var context = canvas.getContext('2d');
+	// give canvas some substance
+	canvas.width = 512;
+	canvas.height = 480;
+	// console.dir(canvas)
+	// Put the canvas in the DOM
+	document.body.appendChild(canvas);
+
+	var bgImage = new Image();
+	bgImage.src = 'assets/background.png';
+
+	// ourstuffwillgohere !!!!
+	var hero = new Image();
+	hero.src = "assets/link_down.gif";
+	var heroLocation = {
+		x: 100,
+		y: 100,
+	}
+
+	var goblin = new Image();
+	goblin.src = "assets/monster.png";
+	var goblinLocation = {
+		x: 250,
+		y: 200,
+	}
+	// this array will hold the keycodes that are currently pressed down
+	var keysDown = [];
+	// make hero move
+	addEventListener('keydown', function(event){
+		// console.log(event.keyCode);
+		keysDown[event.keyCode] = true;
+	});
+
+	addEventListener('keyup', function(event){
+		delete keysDown[event.keyCode];
+	});
+	var hits = 4;
+	function swing(){
+		if(hits !== 0){
+			if(keysDown[32] && keysDown[40]){
+				hero.src = "assets/link_down_swing3.gif";
+			}
+			if(keysDown[32] && keysDown[37]){
+				hero.src = "assets/link_left_swing3.gif";
+			}
+			if(keysDown[32] && keysDown[39]){
+				hero.src = "assets/link_right_swing3.gif";
+			}
+			if(keysDown[32] && keysDown[38]){
+				hero.src = "assets/link_up_swing3.gif";
+			}
+		}
+	}
+	var left = "assets/link_left.gif";
+	var right = "assets/link_right.gif";
+	var down = "assets/link_down.gif";
+	var up = "assets/link_up.gif";
+	function update(){
+		console.log(canMoveLeft());
+		if(canMoveRight()){
+			if(keysDown[39]){
+			// move him right
+			heroLocation.x += 5;
+			hero.src = right;
+			}
+		}else{
+				heroLocation.x -=5;
+			}
+		if(canMoveLeft()){
+			if(keysDown[37]){
+				heroLocation.x -= 5;
+				hero.src = left;
+			}
+		}else{
+			heroLocation.x +=5
+		}
+		if(canMoveUp()){
+			if(38 in keysDown){
+				heroLocation.y -= 5;
+				hero.src = up;
+			}
+		}
+		if(canMoveDown()){
+			if(40 in keysDown){
+				heroLocation.y += 5;
+				hero.src = down;
+			}
+		}
+		// if hero and goblin run into each other
+		if ((heroLocation.x <= (goblinLocation.x + 32)) //32 is the size of the img. check size of img
+			&& (heroLocation.y <= (goblinLocation.y + 32)) 
+			&& (goblinLocation.x <= (heroLocation.x + 32)) 
+			&& (goblinLocation.y <= (heroLocation.y + 32))){
+			reset();
+		}
+		swing();
+	};
+
+	function canMoveLeft(){
+		return heroLocation.x >= 32;
+	}
+	function canMoveRight(){
+		return heroLocation.x + 64 <= 512;
+	}
+	function canMoveUp(){
+		return heroLocation.y >=32;
+	}
+	function canMoveDown(){
+		return heroLocation.y + 64 <= 480;
+	}
+
+
+	// console.log(event.keyCode);
+	//up is 38
+	//right is 39
+	//down is 40
+	//left is 37
+	//space is 32
+	function reset(){
+		if(keysDown[32]){
+			goblinLocation.x = (Math.random() * 480)
+			goblinLocation.y = (Math.random() * 448)
+		}
+	}
+	// make the goblin reappear after the hero captures him
+
+	function draw(){
+		console.log(keysDown);
+		// this is where js draws our stuff!!
+		update();
+		context.drawImage(bgImage, 0, 0);
+		context.drawImage(hero, heroLocation.x, heroLocation.y);
+		context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
+		requestAnimationFrame(draw);
+	}
+
+	draw();
+
+</script>
+</body>
+</html>
