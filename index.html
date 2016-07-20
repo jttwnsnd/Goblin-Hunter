@@ -7,22 +7,33 @@
 			text-align: center;
 			margin: auto;
 		}
+		.right {
+			float: right;
+		}
+		.left {
+			float: left;
+		}
 	</style>
 </head>
 <body>
 	<h1>Conquer the Goblin!</h1>
 	<h4>Destroy the goblins. Press SPACE to swing your sword. Use the arrow keys to navigate. <br />
-	Watch out for your hit counter. Collect 10 ruppees to reset counter.</h4>
+	Watch out for your swing counter. You'll be defenseless if you run out! Collect 10 rupees to reset counter.</h4>
 
-	<div>
+	<div class="left">
 		<h2>Swing Counter</h2>
-		<h4>4</h4>
+		<h4 id="swing">4</h4>
+		<h2>Ruppees Collected</h2>
+		<h4 id="rupeeCounter">0</h4>
 	</div>
 
-	<div>
-		<div>
-			<h2>Ruppees Collected</h2>
-			<h4>0</h4>
+	<div class="right">
+		<div class="left">
+			<h2>High Score</h2>
+			<h2 id="high_score">0</h2>
+			<h3>Score</h3>
+			<h4 id="score">0</h4>
+
 		</div>
 	</div>
 	
@@ -57,6 +68,13 @@
 		x: 250,
 		y: 200,
 	}
+
+	var rupee = new Image();
+	rupee.src = "assets/RupeeLTTP.gif";
+	var rupeeLocation = {
+		x: (Math.random() * 480),
+		y: (Math.random() * 448),
+	}
 	// this array will hold the keycodes that are currently pressed down
 	var keysDown = [];
 	// make hero move
@@ -68,9 +86,27 @@
 	addEventListener('keyup', function(event){
 		delete keysDown[event.keyCode];
 	});
-	var hits = 4;
+
+	var score = 0;
+	if(parseInt(document.getElementById('score').innerHTML) > parseInt(document.getElementById('high_score').innerHTML)){
+		document.getElementById('high_score').innerHTML = document.getElementById('score').innerHTML;
+	}
+
+	var hits = document.getElementById('swing').innerHTML;
+	function oneAtATime(){
+		var a = 0;
+		var b = parseInt(hits);
+		if(keysDown[32]){
+			a++;
+		}
+		if (a > 0){
+			hits = (b - 1).toString();
+		}
+		return hits;
+	}
+	var wallet = 0;
 	function swing(){
-		if(hits !== 0){
+		if(hits > 0){
 			if(keysDown[32] && keysDown[40]){
 				hero.src = "assets/link_down_swing3.gif";
 			}
@@ -98,8 +134,8 @@
 			hero.src = right;
 			}
 		}else{
-				heroLocation.x -=5;
-			}
+			heroLocation.x -=5;
+		}
 		if(canMoveLeft()){
 			if(keysDown[37]){
 				heroLocation.x -= 5;
@@ -120,14 +156,30 @@
 				hero.src = down;
 			}
 		}
+		// if player runs into rupee, adds to counter and resets location.
+		if ((heroLocation.x <= (rupeeLocation.x + 32)) //32 is the size of the img. check size of img
+			&& (heroLocation.y <= (rupeeLocation.y + 32)) 
+			&& (rupeeLocation.x <= (heroLocation.x + 32)) 
+			&& (rupeeLocation.y <= (heroLocation.y + 32))){
+			wallet ++;
+			document.getElementById("rupeeCounter").innerHTML = wallet.toString();
+			score++;
+			resetRupee();
+		}
+
 		// if hero and goblin run into each other
+
 		if ((heroLocation.x <= (goblinLocation.x + 32)) //32 is the size of the img. check size of img
 			&& (heroLocation.y <= (goblinLocation.y + 32)) 
 			&& (goblinLocation.x <= (heroLocation.x + 32)) 
 			&& (goblinLocation.y <= (heroLocation.y + 32))){
+			swing();
 			reset();
+			document.getElementById('swing').innerHTML = oneAtATime();
+			score++
 		}
-		swing();
+		resetSwings();
+		document.getElementById('score').innerHTML = score.toString();
 	};
 
 	function canMoveLeft(){
@@ -143,6 +195,19 @@
 		return heroLocation.y + 64 <= 480;
 	}
 
+	// function canMoveLeft(){
+	// 	return heroLocation.x >= 32;
+	// }
+	// function canMoveRight(){
+	// 	return heroLocation.x + 64 <= 512;
+	// }
+	// function canMoveUp(){
+	// 	return heroLocation.y >=32;
+	// }
+	// function canMoveDown(){
+	// 	return heroLocation.y + 64 <= 480;
+	// }
+
 
 	// console.log(event.keyCode);
 	//up is 38
@@ -152,8 +217,21 @@
 	//space is 32
 	function reset(){
 		if(keysDown[32]){
-			goblinLocation.x = (Math.random() * 480)
-			goblinLocation.y = (Math.random() * 448)
+			goblinLocation.x = (Math.random() * 480);
+			goblinLocation.y = (Math.random() * 448);
+		}
+	}
+	// rests rupee spawn
+	function resetRupee(){
+		rupeeLocation.x = (Math.random() * 480);
+		rupeeLocation.y = (Math.random() * 448);
+	}
+
+	function resetSwings() {
+		if(document.getElementById("rupeeCounter").innerHTML === "10") {
+			document.getElementById("swing").innerHTML = "4";
+			document.getElementById("rupeeCounter").innerHTML = "0";
+			wallet = 0;
 		}
 	}
 	// make the goblin reappear after the hero captures him
@@ -165,6 +243,7 @@
 		context.drawImage(bgImage, 0, 0);
 		context.drawImage(hero, heroLocation.x, heroLocation.y);
 		context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
+		context.drawImage(rupee, rupeeLocation.x, rupeeLocation.y);
 		requestAnimationFrame(draw);
 	}
 
