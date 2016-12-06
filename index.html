@@ -20,7 +20,7 @@
 	<h1>Conquer the Goblin!</h1>
 	<h4>Destroy the goblins. Press SPACE to swing your sword. Use the arrow keys to navigate. <br />
 	Watch out for your swing counter. You'll be defenseless if you run out! Collect 10 rupees to reset counter.<br />
-	<input id="play" type="button" name="playgame" value="Let's PLay"></h4>
+	<input id="play" type="button" name="playgame" value="Let's PLay" onclick="play = true"></h4>
 
 	<div class="left">
 		<h2>Swing Counter</h2>
@@ -59,6 +59,7 @@
 	// ourstuffwillgohere !!!!
 	var hero = new Image();
 	hero.src = "assets/link_down.gif";
+	hero.direction = '';
 	var heroLocation = {
 		x: 100,
 		y: 100,
@@ -68,7 +69,7 @@
 	goblin.src = "assets/monster.png";
 	var goblinLocation = {
 		x: 250,
-		y: 200,
+		y: 250,
 	}
 
 	var rupee = new Image();
@@ -77,6 +78,17 @@
 		x: (Math.random() * 480),
 		y: (Math.random() * 448),
 	}
+	// determines which arrow will fire
+
+	var arrow = new Image();
+	arrow.src = "assets/arrow1.png";
+	var arrowDirection = {
+		// arrow is coming from monster
+		x: goblinLocation.x,
+		y: goblinLocation.y,
+	}
+
+	var play = false;
 	// this array will hold the keycodes that are currently pressed down
 	var keysDown = [];
 	// make hero move
@@ -98,27 +110,22 @@
 	function oneAtATime(){
 		var a = 0;
 		var b = parseInt(hits);
-		if(keysDown[32]){
-			a++;
-		}
-		if (a > 0){
-			hits = (b - 1).toString();
-		}
+		
 		return hits;
 	}
 	var wallet = 0;
 	function swing(){
-		if(hits > 0){
-			if(keysDown[32] && keysDown[40]){
+		if(keysDown[32]){
+			if(hero.direction === 'down'){
 				hero.src = "assets/link_down_swing3.gif";
 			}
-			if(keysDown[32] && keysDown[37]){
+			else if(hero.direction === 'left'){
 				hero.src = "assets/link_left_swing3.gif";
 			}
-			if(keysDown[32] && keysDown[39]){
+			else if(hero.direction === 'right'){
 				hero.src = "assets/link_right_swing3.gif";
 			}
-			if(keysDown[32] && keysDown[38]){
+			else if(hero.direction === 'up'){
 				hero.src = "assets/link_up_swing3.gif";
 			}
 		}
@@ -128,12 +135,14 @@
 	var down = "assets/link_down.gif";
 	var up = "assets/link_up.gif";
 	function update(){
+		swing();
 		console.log(canMoveLeft());
 		if(canMoveRight()){
 			if(keysDown[39]){
 			// move him right
 			heroLocation.x += 5;
 			hero.src = right;
+			hero.direction = 'right';
 			}
 		}else{
 			heroLocation.x -=5;
@@ -142,6 +151,7 @@
 			if(keysDown[37]){
 				heroLocation.x -= 5;
 				hero.src = left;
+				hero.direction = 'left';
 			}
 		}else{
 			heroLocation.x +=5
@@ -150,12 +160,14 @@
 			if(38 in keysDown){
 				heroLocation.y -= 5;
 				hero.src = up;
+				hero.direction = 'up';
 			}
 		}
 		if(canMoveDown()){
 			if(40 in keysDown){
 				heroLocation.y += 5;
 				hero.src = down;
+				hero.direction = 'down';
 			}
 		}
 		// if player runs into rupee, adds to counter and resets location.
@@ -180,10 +192,21 @@
 			document.getElementById('swing').innerHTML = oneAtATime();
 			score++
 		}
+		if ((heroLocation.x <= (arrowDirection.x + 32)) //32 is the size of the img. check size of img
+			&& (heroLocation.y <= (arrowDirection.y + 32)) 
+			&& (arrowDirection.x <= (heroLocation.x + 32)) 
+			&& (arrowDirection.y <= (heroLocation.y + 32))){
+			arrow.src = "assets/explosion.png"
+			alive = false;
+		}
+		if(tick % 20 === 0){
+			fireArrow();
+		}
 		resetSwings();
+		resetArrow();
 		document.getElementById('score').innerHTML = score.toString();
 	};
-
+	var alive = true;
 	function canMoveLeft(){
 		return heroLocation.x >= 32;
 	}
@@ -196,6 +219,112 @@
 	function canMoveDown(){
 		return heroLocation.y + 64 <= 480;
 	}
+
+
+	// figuring out which direction, and how to move
+	var arrowDir;
+	var above;
+	var leftSide;
+	// this determines where the hero is. this will prevent the arrow from getting two values, and aims it at the direction with a greater value
+	function findHero(){
+		if(heroLocation.x >= goblinLocation.x){
+			above = false;
+		}
+		if(heroLocation.x < goblinLocation.x){
+			above = true;
+		}
+		if(heroLocation.y >= goblinLocation.y){
+			leftSide = false;
+		}
+		if(heroLocation.y < goblinLocation.y){
+			leftSide = true;
+		}
+	};
+
+	function whichPicture(){
+		if((above && leftSide) && (heroLocation.x > heroLocation.y)){
+			arrowDir = "up"
+		}
+		if((above && leftSide) && (heroLocation.x < heroLocation.y)){
+			arrowDir = "left";
+		}
+		if((above && !leftSide) && (heroLocation.x < heroLocation.y)){
+			arrowDir = "up";
+		}
+		if((above && !leftSide) && (heroLocation.x > heroLocation.y)){
+			arrowDir = "right";
+		}
+		if((!above && !leftSide) && (heroLocation.x > heroLocation.y)){
+			arrowDir = "down";
+		}
+		if((!above && !leftSide) && (heroLocation.x < heroLocation.y)){
+			arrowDir = "right";
+		}
+		if((!above && leftSide) && (heroLocation.x > heroLocation.y)){
+			arrowDir = "down";
+		}
+		if((!above && leftSide) && (heroLocation.x < heroLocation.y)){
+			arrowDir = "left";
+		}
+	}
+
+	//shoots arrow
+	var tick;
+	function fireArrow(){
+		whichPicture();
+		findHero();
+		if(arrowDir === "down"){
+			movingArrowDown(1);
+		}
+		if(arrowDir === "right"){
+			movingArrowRight(2);
+		}
+		if(arrowDir === "up"){
+			movingArrowUp(3);
+		}
+		if(arrowDir === "left"){
+			movingArrowLeft(4);
+		}
+	};
+	// the movement of arrows
+	function movingArrowDown(x){
+		arrow.src = "assets/arrow" + x + ".png";
+		if(arrowDirection.y <= 479){
+				arrowDirection.x += 3;
+		};
+		if(arrowDirection.y >= 480){
+			arrow.src = "assets/explosion.png"
+		};
+	}
+	function movingArrowRight(x){
+		arrow.src = "assets/arrow" + x + ".png";
+		if(arrowDirection.x <= 511){
+				arrowDirection.x += 3;
+		};
+		if(arrowDirection.x >= 512){
+			arrow.src = "assets/explosion.png"
+		};
+	}
+	function movingArrowUp(x){
+		arrow.src = "assets/arrow" + x + ".png";
+		if(arrowDirection.y >= 1){
+				arrowDirection.x -= 3;
+		};
+		if(arrowDirection.y <= 0){
+			arrow.src = "assets/explosion.png"
+		};
+	}
+	function movingArrowLeft(x){
+		arrow.src = "assets/arrow" + x + ".png";
+		if(arrowDirection.x >= 1){
+				arrowDirection.x -= 3;
+		};
+		if(arrowDirection.x <= 0){
+			arrow.src = "assets/explosion.png"
+		};
+	}
+
+	// shoots
 
 	// function canMoveLeft(){
 	// 	return heroLocation.x >= 32;
@@ -237,19 +366,34 @@
 		}
 	}
 	// make the goblin reappear after the hero captures him
-
+	var boom;
+	function resetArrow(){
+		if(arrow.src === "assets/explosion.png"){
+			boom = true;
+		}
+		if(arrow.src !== "assets/explosion.png"){
+			boom = false;
+		}
+	}
 	function draw(){
 		console.log(keysDown);
 		// this is where js draws our stuff!!
-		update();
+		if(play = true){
+			update();
+		}
 		context.drawImage(bgImage, 0, 0);
 		context.drawImage(hero, heroLocation.x, heroLocation.y);
 		context.drawImage(goblin, goblinLocation.x, goblinLocation.y);
+		if(tick % 100 === 0){
+			context.drawImage(arrow, goblinLocation.x, goblinLocation.y);
+		};
 		context.drawImage(rupee, rupeeLocation.x, rupeeLocation.y);
 		requestAnimationFrame(draw);
+		tick++;
 	}
-
-	draw();
+	if (alive){
+		draw();
+	}
 
 </script>
 </body>
